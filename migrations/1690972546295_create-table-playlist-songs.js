@@ -25,7 +25,7 @@ exports.up = (pgm) => {
   pgm.addConstraint('playlist_songs', 'fk_playlist_songs_playlist', {
     foreignKeys: {
       columns: 'playlist_id',
-      references: 'playlist(id)',
+      references: 'playlists(id)',
     },
   });
 

@@ -1,25 +1,31 @@
 require('dotenv').config();
-
+// Ekstension
 const Hapi = require('@hapi/hapi');
+const Jwt = require('@hapi/jwt');
 
 // Albums
 const albums = require('./api/albums');
-const AlbumsService = require('./service/postgres/albums/AlbumsService');
+const AlbumsService = require('./service/postgres/AlbumsService');
 const AlbumsValidator = require('./validator/albums');
 
 // Songs
 const songs = require('./api/songs');
-const SongsService = require('./service/postgres/songs/SongsService');
+const SongsService = require('./service/postgres/SongsService');
 const SongsValidator = require('./validator/songs');
 
 // Songs
 const users = require('./api/users');
-const UsersService = require('./service/postgres/users/UsersService');
+const UsersService = require('./service/postgres/UsersService');
 const UsersValidator = require('./validator/users');
 
-// Songs
+// Playlists
+const playlists = require('./api/playlists');
+const PlaylistsService = require('./service/postgres/PlaylistsService');
+const PlaylistValidator = require('./validator/playlists');
+
+// Authentications
 const authentications = require('./api/authentications');
-const AuthenticationsServices = require('./service/postgres/authentications/AuthenticationsService');
+const AuthenticationsServices = require('./service/postgres/AuthenticationsService');
 const AuthenticationValidator = require('./validator/authentications');
 const TokenManager = require('./tokenize/TokenManager');
 
@@ -30,6 +36,7 @@ const init = async () => {
   const albumsService = new AlbumsService();
   const songsService = new SongsService();
   const usersService = new UsersService();
+  const playlistsService = new PlaylistsService();
   const authenticationsService = new AuthenticationsServices();
 
   const server = Hapi.server({
@@ -40,6 +47,28 @@ const init = async () => {
         origin: ['*'],
       },
     },
+  });
+
+  await server.register([
+    {
+      plugin: Jwt,
+    },
+  ]);
+
+  server.auth.strategy('openmusic_jwt', 'jwt', {
+    keys: process.env.ACCESS_TOKEN_KEY,
+    verify: {
+      aud: false,
+      iss: false,
+      sub: false,
+      maxAgeSec: process.env.ACCESS_TOKEN_AGE,
+    },
+    validate: (artifacts) => ({
+      isValid: true,
+      credentials: {
+        id: artifacts.decoded.payload.id,
+      },
+    }),
   });
 
   await server.register([
@@ -62,6 +91,15 @@ const init = async () => {
       options: {
         service: usersService,
         validator: UsersValidator,
+      },
+    },
+    {
+      plugin: playlists,
+      options: {
+        playlistsService,
+        songsService,
+        tokenManager: TokenManager,
+        validator: PlaylistValidator,
       },
     },
     {
@@ -88,11 +126,11 @@ const init = async () => {
         newResponse.code(response.statusCode);
         return newResponse;
       }
-      // mempertahankan penanganan client error oleh hapi secara native, seperti 404, etc.
+      // Mempertahankan penanganan client error oleh hapi secara native, seperti 404, etc.
       if (!response.isServer) {
         return h.continue;
       }
-      // penanganan server error sesuai kebutuhan
+      // Penanganan server error sesuai kebutuhan
       const newResponse = h.response({
         status: 'error',
         message: 'terjadi kegagalan pada server kami',
@@ -100,7 +138,7 @@ const init = async () => {
       newResponse.code(500);
       return newResponse;
     }
-    // jika bukan error, lanjutkan dengan response sebelumnya (tanpa terintervensi)
+    // Jika bukan error, lanjutkan dengan response sebelumnya (tanpa terintervensi)
     return h.continue;
   });
 
