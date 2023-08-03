@@ -2,7 +2,7 @@ const UsersHandler = require('./handler');
 const routes = require('./routes');
 
 module.exports = {
-  name: 'users',
+  name: 'openmusic-users',
   verson: '1.0.0',
   register: async (server, { service, validator }) => {
     const userHandler = new UsersHandler(service, validator);

@@ -3,17 +3,18 @@ const routes = require('./routes');
 const PlaylistsHandler = require('./handler');
 
 module.exports = {
-  name: 'playlist',
+  name: 'openmusic-playlists',
   version: '1.0.0',
   register: async (
     server,
     {
-      playlistsService, songsService, tokenManager, validator,
+      playlistsService, songsService, activitiesService, tokenManager, validator,
     },
   ) => {
     const playlistHandler = new PlaylistsHandler(
       playlistsService,
       songsService,
+      activitiesService,
       tokenManager,
       validator,
     );

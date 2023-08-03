@@ -2,7 +2,7 @@ const SongsHandler = require('./handler');
 const routes = require('./routes');
 
 module.exports = {
-  name: 'open-music-songs',
+  name: 'openmusic-songs',
   version: '1.0.0',
   register: async (server, { service, validator }) => {
     const songsHandler = new SongsHandler(service, validator);

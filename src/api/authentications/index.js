@@ -2,7 +2,7 @@ const routes = require('./routes');
 const AuthenticationsHandler = require('./handler');
 
 module.exports = {
-  name: 'authentications',
+  name: 'openmusic-authentications',
   version: '1.0.0',
   register: async (server, {
     authenticationsService,

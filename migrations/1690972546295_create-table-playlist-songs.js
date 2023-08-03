@@ -26,6 +26,7 @@ exports.up = (pgm) => {
     foreignKeys: {
       columns: 'playlist_id',
       references: 'playlists(id)',
+      onDelete: 'cascade',
     },
   });
 
@@ -34,6 +35,7 @@ exports.up = (pgm) => {
     foreignKeys: {
       columns: 'song_id',
       references: 'songs(id)',
+      onDelete: 'cascade',
     },
   });
 };

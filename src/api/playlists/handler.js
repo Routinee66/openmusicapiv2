@@ -1,8 +1,9 @@
 const autoBind = require('auto-bind');
 
 class PlaylistsHandler {
-  constructor(playlistsService, songsService, tokenManager, validator) {
+  constructor(playlistsService, songsService, activitiesService, tokenManager, validator) {
     this._playlistsService = playlistsService;
+    this._activitiessService = activitiesService;
     this._songsService = songsService;
     this._tokenManager = tokenManager;
     this._validator = validator;
@@ -58,6 +59,7 @@ class PlaylistsHandler {
     await this._playlistsService.verifyPlaylistOwner(playlistId, ownerId);
 
     const playlistSongId = await this._playlistsService.addPlaylistSong(playlistId, songId);
+    await this._activitiessService.addActivities(playlistId, songId, ownerId, 'add');
     const response = h.response({
       status: 'success',
       message: 'Berhasil menambahkan lagu pada playlist',
@@ -73,6 +75,7 @@ class PlaylistsHandler {
     const { id: ownerId } = request.auth.credentials;
     const { id: playlistId } = request.params;
     await this._playlistsService.verifyPlaylistOwner(playlistId, ownerId);
+
     const playlist = await this._playlistsService.getPlaylistById(playlistId, ownerId);
     const songs = await this._playlistsService.getPlaylistSong(playlistId);
     playlist.songs = songs;
@@ -89,10 +92,28 @@ class PlaylistsHandler {
     const { id: playlistId } = request.params;
     const { songId } = request.payload;
     await this._playlistsService.verifyPlaylistOwner(playlistId, ownerId);
+
     await this._playlistsService.deletePlaylistSong(songId);
+
+    await this._activitiessService.addActivities(playlistId, songId, ownerId, 'delete');
     return {
       status: 'success',
       message: 'Berhasil menghapus lagu dari playlist',
+    };
+  }
+
+  async getPlaylistActivitiesHandler(request) {
+    const { id: ownerId } = request.auth.credentials;
+    const { id: playlistId } = request.params;
+    await this._playlistsService.verifyPlaylistOwner(playlistId, ownerId);
+
+    const activities = await this._activitiessService.getActivities(playlistId);
+    return {
+      status: 'success',
+      data: {
+        playlistId,
+        activities,
+      },
     };
   }
 }

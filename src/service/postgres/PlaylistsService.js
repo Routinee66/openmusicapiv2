@@ -60,7 +60,7 @@ class PlaylistsService {
       text: 'DELETE FROM playlists WHERE id = $1',
       values: [playlistId],
     };
-    this.clearPlaylistSongs(playlistId);
+    // this.clearPlaylistSongs(playlistId);
     const result = await this._pool.query(query);
     if (!result.rowCount) {
       throw new InvariantError('Gagal menghapus playlist');
@@ -83,13 +83,13 @@ class PlaylistsService {
 
   async getPlaylistSong(playlistId) {
     const query = {
-      text: `SELECT songs.id, songs.title, songs.performer 
-        FROM playlist_songs 
-        JOIN songs 
+      text: `SELECT songs.id, 
+      songs.title, 
+      songs.performer 
+        FROM playlist_songs
+        JOIN songs
         ON playlist_songs.song_id = songs.id 
-        JOIN playlists
-        ON playlist_songs.playlist_id = playlists.id 
-        WHERE playlists.id = $1`,
+        WHERE playlist_songs.playlist_id = $1`,
       values: [playlistId],
     };
 
