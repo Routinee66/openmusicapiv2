@@ -166,15 +166,6 @@ class PlaylistsService {
       throw new NotFoundError('Playlist tidak ditemukan');
     }
   }
-
-  async clearPlaylistSongs(playlistId) {
-    const query = {
-      text: 'DELETE FROM playlist_songs WHERE playlist_id = $1',
-      values: [playlistId],
-    };
-
-    await this._pool.query(query);
-  }
 }
 
 module.exports = PlaylistsService;
