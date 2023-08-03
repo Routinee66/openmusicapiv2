@@ -5,8 +5,9 @@ const AuthorizationError = require('../../exceptions/AuthorizationError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 
 class PlaylistsService {
-  constructor() {
+  constructor(collaborationsService) {
     this._pool = new Pool();
+    this._collaborationsService = collaborationsService;
   }
 
   async addPlaylist(playlist, owner) {
@@ -24,18 +25,31 @@ class PlaylistsService {
     return result.rows[0].id;
   }
 
-  async getPlaylists(ownerId) {
-    const query = {
-      text: `SELECT playlists.id, playlists.name, users.username 
+  async getPlaylists(userId) {
+    const queryOwner = {
+      text: `SELECT playlists.id, playlists.name, users.username
             FROM playlists
-            JOIN users
-            ON playlists.owner = users.id 
-            WHERE users.id = $1`,
-      values: [ownerId],
+            LEFT JOIN users
+            ON users.id = playlists.owner
+            WHERE playlists.owner = $1;`,
+      values: [userId],
     };
 
-    const result = await this._pool.query(query);
-    return result.rows;
+    const queryCollaborator = {
+      text: `SELECT playlists.id, playlists.name, users.username
+        FROM playlists
+        LEFT JOIN users
+        ON users.id = playlists.owner
+        JOIN collaborations
+        ON playlists.id = collaborations.playlist_id
+        WHERE collaborations.user_id = $1;`,
+      values: [userId],
+    };
+    const resultOwner = await this._pool.query(queryOwner);
+    const resultCollaborator = await this._pool.query(queryCollaborator);
+
+    const result = resultOwner.rows.concat(resultCollaborator.rows);
+    return result;
   }
 
   async getPlaylistById(playlistId) {
@@ -60,7 +74,6 @@ class PlaylistsService {
       text: 'DELETE FROM playlists WHERE id = $1',
       values: [playlistId],
     };
-    // this.clearPlaylistSongs(playlistId);
     const result = await this._pool.query(query);
     if (!result.rowCount) {
       throw new InvariantError('Gagal menghapus playlist');
@@ -123,6 +136,21 @@ class PlaylistsService {
     const { owner } = result.rows[0];
     if (owner !== ownerId) {
       throw new AuthorizationError('Anda tidak memiliki akses');
+    }
+  }
+
+  async verifyPlaylistAccess(playlistId, ownerId) {
+    try {
+      await this.verifyPlaylistOwner(playlistId, ownerId);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      try {
+        await this._collaborationsService.verifyCollaborator(playlistId, ownerId);
+      } catch {
+        throw error;
+      }
     }
   }
 

@@ -30,6 +30,13 @@ const ActivitiesService = require('./service/postgres/ActivitiesService');
 const authentications = require('./api/authentications');
 const AuthenticationsServices = require('./service/postgres/AuthenticationsService');
 const AuthenticationValidator = require('./validator/authentications');
+
+// Collaborations
+const collaborations = require('./api/collaborations');
+const CollaborationsServices = require('./service/postgres/CollaborationsService');
+const CollaborationsValidator = require('./validator/collaborations');
+
+// Token
 const TokenManager = require('./tokenize/TokenManager');
 
 // Error handling
@@ -39,7 +46,8 @@ const init = async () => {
   const albumsService = new AlbumsService();
   const songsService = new SongsService();
   const usersService = new UsersService();
-  const playlistsService = new PlaylistsService();
+  const collaborationsService = new CollaborationsServices();
+  const playlistsService = new PlaylistsService(collaborationsService);
   const activitiesService = new ActivitiesService();
   const authenticationsService = new AuthenticationsServices();
 
@@ -114,6 +122,15 @@ const init = async () => {
         usersService,
         tokenManager: TokenManager,
         validator: AuthenticationValidator,
+      },
+    },
+    {
+      plugin: collaborations,
+      options: {
+        collaborationsService,
+        usersService,
+        playlistsService,
+        validator: CollaborationsValidator,
       },
     },
   ]);
