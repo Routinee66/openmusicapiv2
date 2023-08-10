@@ -7,7 +7,7 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 
 class UsersService {
   constructor() {
-    this._pool = new Pool();
+    this.pool = new Pool();
   }
 
   async postUser(username, password, fullname) {
@@ -20,7 +20,7 @@ class UsersService {
       values: [id, username, hashedPassword, fullname],
     };
 
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
 
     if (!result.rowCount) {
       throw new InvariantError('Gagal menambahkan user');
@@ -34,7 +34,7 @@ class UsersService {
       text: 'SELECT * FROM users WHERE id = $1',
       values: [userId],
     };
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
     if (!result.rowCount) {
       throw new NotFoundError('User tidak ditemukan');
     }
@@ -45,7 +45,7 @@ class UsersService {
       text: 'SELECT * FROM users WHERE username = $1',
       values: [username],
     };
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
     if (result.rowCount > 0) {
       throw new InvariantError('Gagal menambahkan user. Username sudah terdaftar');
     }
@@ -57,7 +57,7 @@ class UsersService {
       values: [username],
     };
 
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
 
     if (!result.rowCount) {
       throw new AuthenticationError('Kredensial yang Anda berikan salah');

@@ -6,8 +6,8 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 
 class PlaylistsService {
   constructor(collaborationsService) {
-    this._pool = new Pool();
-    this._collaborationsService = collaborationsService;
+    this.pool = new Pool();
+    this.collaborationsService = collaborationsService;
   }
 
   async addPlaylist(playlist, owner) {
@@ -16,7 +16,7 @@ class PlaylistsService {
       text: 'INSERT INTO playlists VALUES($1, $2, $3) RETURNING id',
       values: [id, playlist, owner],
     };
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
 
     if (!result.rowCount) {
       throw new InvariantError('Gagal menambahkan playlist');
@@ -26,30 +26,18 @@ class PlaylistsService {
   }
 
   async getPlaylists(userId) {
-    const queryOwner = {
-      text: `SELECT playlists.id, playlists.name, users.username
-            FROM playlists
-            LEFT JOIN users
-            ON users.id = playlists.owner
-            WHERE playlists.owner = $1;`,
-      values: [userId],
-    };
-
-    const queryCollaborator = {
+    const query = {
       text: `SELECT playlists.id, playlists.name, users.username
         FROM playlists
         LEFT JOIN users
         ON users.id = playlists.owner
-        JOIN collaborations
+        FULL JOIN collaborations
         ON playlists.id = collaborations.playlist_id
-        WHERE collaborations.user_id = $1;`,
+        WHERE playlists.owner = $1 OR collaborations.user_id = $1`,
       values: [userId],
     };
-    const resultOwner = await this._pool.query(queryOwner);
-    const resultCollaborator = await this._pool.query(queryCollaborator);
-
-    const result = resultOwner.rows.concat(resultCollaborator.rows);
-    return result;
+    const result = await this.pool.query(query);
+    return result.rows;
   }
 
   async getPlaylistById(playlistId) {
@@ -62,7 +50,7 @@ class PlaylistsService {
       values: [playlistId],
     };
 
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
     if (!result.rowCount) {
       throw new NotFoundError('Playlist tidak ditemukan');
     }
@@ -74,7 +62,7 @@ class PlaylistsService {
       text: 'DELETE FROM playlists WHERE id = $1',
       values: [playlistId],
     };
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
     if (!result.rowCount) {
       throw new InvariantError('Gagal menghapus playlist');
     }
@@ -87,7 +75,7 @@ class PlaylistsService {
       values: [id, playlistId, songId],
     };
 
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
     if (!result.rowCount) {
       throw new InvariantError('Gagal menambahkan playlist song');
     }
@@ -106,7 +94,7 @@ class PlaylistsService {
       values: [playlistId],
     };
 
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
 
     return result.rows;
   }
@@ -117,7 +105,7 @@ class PlaylistsService {
       values: [songId],
     };
 
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
     if (!result.rowCount) {
       throw new InvariantError('Gagal menghapus playlist song');
     }
@@ -131,7 +119,7 @@ class PlaylistsService {
       values: [playlistId],
     };
 
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
 
     const { owner } = result.rows[0];
     if (owner !== ownerId) {
@@ -147,7 +135,7 @@ class PlaylistsService {
         throw error;
       }
       try {
-        await this._collaborationsService.verifyCollaborator(playlistId, ownerId);
+        await this.collaborationsService.verifyCollaborator(playlistId, ownerId);
       } catch {
         throw error;
       }
@@ -160,7 +148,7 @@ class PlaylistsService {
       values: [playlistId],
     };
 
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
 
     if (!result.rowCount) {
       throw new NotFoundError('Playlist tidak ditemukan');

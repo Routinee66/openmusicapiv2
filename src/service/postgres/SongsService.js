@@ -5,7 +5,7 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 
 class SongsService {
   constructor() {
-    this._pool = new Pool();
+    this.pool = new Pool();
   }
 
   async addSong({
@@ -18,7 +18,7 @@ class SongsService {
       values: [id, title, year, performer, genre, duration, albumId],
     };
 
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
 
     if (!result.rows[0].id) {
       throw new InvariantError('Lagu gagal ditambahkan');
@@ -27,23 +27,13 @@ class SongsService {
     return result.rows[0].id;
   }
 
-  async getSongs() {
-    const { rows } = await this._pool.query('SELECT id, title, performer FROM songs');
-    return rows;
-  }
-
-  async getSongsByTitleAndPerformer(valueTitle, valuePerformer) {
-    const result = await this._pool.query(`SELECT id, title, performer FROM songs WHERE title ILIKE '%${valueTitle}%' AND performer ILIKE '%${valuePerformer}%'`);
-    return result.rows;
-  }
-
-  async getSongsByTitle(value) {
-    const result = await this._pool.query(`SELECT id, title, performer FROM songs WHERE title ILIKE '%${value}%'`);
-    return result.rows;
-  }
-
-  async getSongsByPerformer(value) {
-    const result = await this._pool.query(`SELECT id, title, performer FROM songs WHERE performer ILIKE '%${value}%'`);
+  async getSongs(valueTitle = '', valuePerformer = '') {
+    const query = {
+      text: `SELECT id, title, performer 
+        FROM songs WHERE title ILIKE '%${valueTitle}%' 
+        AND performer ILIKE '%${valuePerformer}%'`,
+    };
+    const result = await this.pool.query(query);
     return result.rows;
   }
 
@@ -52,7 +42,7 @@ class SongsService {
       text: 'SELECT * FROM songs WHERE id = $1',
       values: [id],
     };
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
     if (!result.rowCount) {
       throw new NotFoundError('Lagu tidak ditemukan');
     }
@@ -77,7 +67,7 @@ class SongsService {
       };
     }
 
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
 
     if (!result.rowCount) {
       throw new NotFoundError('Gagal memperbarui lagu. Id tidak ditemukan');
@@ -90,7 +80,7 @@ class SongsService {
       values: [id],
     };
 
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
 
     if (!result.rowCount) {
       throw new NotFoundError('Lagu gagal dihapus. Id tidak ditemukan');
@@ -103,7 +93,7 @@ class SongsService {
       values: [songId],
     };
 
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
     if (!result.rowCount) {
       throw new NotFoundError('Lagu tidak valid');
     }

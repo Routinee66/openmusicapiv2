@@ -4,7 +4,7 @@ const InvariantError = require('../../exceptions/InvariantError');
 
 class CollaborationsService {
   constructor() {
-    this._pool = new Pool();
+    this.pool = new Pool();
   }
 
   async addCollaboration(playlistId, userId) {
@@ -13,7 +13,7 @@ class CollaborationsService {
       text: 'INSERT INTO collaborations VALUES($1, $2, $3) RETURNING id',
       values: [id, playlistId, userId],
     };
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
     if (!result.rowCount) {
       throw new InvariantError('Gagal menambahkan kolaborasi');
     }
@@ -28,7 +28,7 @@ class CollaborationsService {
         RETURNING id`,
       values: [playlistId, userId],
     };
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
     if (!result.rowCount) {
       throw new InvariantError('Gagal menghapus kolaborasi');
     }
@@ -41,7 +41,7 @@ class CollaborationsService {
       values: [userId, playlistId],
     };
 
-    const result = await this._pool.query(query);
+    const result = await this.pool.query(query);
     if (!result.rowCount) {
       throw new InvariantError('Tidak memiliki kolaborasi');
     }

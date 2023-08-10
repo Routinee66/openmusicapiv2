@@ -1,19 +1,18 @@
-/* eslint-disable no-underscore-dangle */
 const autoBind = require('auto-bind');
 
 class AlbumHandler {
   constructor(service, validator) {
-    this._service = service;
-    this._validator = validator;
+    this.service = service;
+    this.validator = validator;
 
     autoBind(this);
   }
 
   async postAlbumHandler(request, h) {
-    this._validator.validateAlbumPayload(request.payload);
+    this.validator.validateAlbumPayload(request.payload);
     const { name = 'untitled', year } = request.payload;
 
-    const albumId = await this._service.addAlbum({ name, year });
+    const albumId = await this.service.addAlbum({ name, year });
 
     const response = h.response({
       status: 'success',
@@ -29,8 +28,8 @@ class AlbumHandler {
 
   async getAlbumByIdHandler(request) {
     const { id } = request.params;
-    const album = await this._service.getAlbumById(id);
-    const songs = await this._service.getSongByAlbum(id);
+    const album = await this.service.getAlbumById(id);
+    const songs = await this.service.getSongByAlbum(id);
 
     if (songs === null) album.songs = [];
     else album.songs = songs;
@@ -44,11 +43,11 @@ class AlbumHandler {
   }
 
   async putAlbumByIdHandler(request) {
-    this._validator.validateAlbumPayload(request.payload);
+    this.validator.validateAlbumPayload(request.payload);
     const { name, year } = request.payload;
     const { id } = request.params;
 
-    await this._service.editAlbumById(id, { name, year });
+    await this.service.editAlbumById(id, { name, year });
 
     return {
       status: 'success',
@@ -58,7 +57,7 @@ class AlbumHandler {
 
   async deleteAlbumByIdHandler(request) {
     const { id } = request.params;
-    await this._service.deleteAlbumById(id);
+    await this.service.deleteAlbumById(id);
 
     return {
       status: 'success',

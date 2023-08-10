@@ -2,23 +2,23 @@ const autoBind = require('auto-bind');
 
 class CollaborationHandler {
   constructor(collaborationsService, usersService, playlistsService, validator) {
-    this._collaborationsService = collaborationsService;
-    this._usersService = usersService;
-    this._playlistsService = playlistsService;
-    this._validator = validator;
+    this.collaborationsService = collaborationsService;
+    this.usersService = usersService;
+    this.playlistsService = playlistsService;
+    this.validator = validator;
 
     autoBind(this);
   }
 
   async postCollaborationHandler(request, h) {
-    this._validator.validateCollaborationPayload(request.payload);
+    this.validator.validateCollaborationPayload(request.payload);
     const { playlistId, userId } = request.payload;
     const { id: credentialId } = request.auth.credentials;
-    await this._usersService.verifyUser(userId);
-    await this._playlistsService.verifyPlaylist(playlistId);
-    await this._playlistsService.verifyPlaylistOwner(playlistId, credentialId);
+    await this.usersService.verifyUser(userId);
+    await this.playlistsService.verifyPlaylist(playlistId);
+    await this.playlistsService.verifyPlaylistOwner(playlistId, credentialId);
 
-    const collaborationId = await this._collaborationsService.addCollaboration(playlistId, userId);
+    const collaborationId = await this.collaborationsService.addCollaboration(playlistId, userId);
     const response = h.response({
       status: 'success',
       message: 'Berhasil menambahkan collaboration',
@@ -32,14 +32,14 @@ class CollaborationHandler {
   }
 
   async deleteCollaborationHandler(request) {
-    this._validator.validateCollaborationPayload(request.payload);
+    this.validator.validateCollaborationPayload(request.payload);
     const { playlistId, userId } = request.payload;
     const { id: credentialId } = request.auth.credentials;
-    await this._usersService.verifyUser(userId);
-    await this._playlistsService.verifyPlaylist(playlistId);
-    await this._playlistsService.verifyPlaylistOwner(playlistId, credentialId);
+    await this.usersService.verifyUser(userId);
+    await this.playlistsService.verifyPlaylist(playlistId);
+    await this.playlistsService.verifyPlaylistOwner(playlistId, credentialId);
 
-    await this._collaborationsService.deleteCollaboration(playlistId, userId);
+    await this.collaborationsService.deleteCollaboration(playlistId, userId);
     return {
       status: 'success',
       message: 'Berhasil menghapus collaboration',
